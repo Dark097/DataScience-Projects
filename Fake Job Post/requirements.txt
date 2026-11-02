@@ -1,6 +1,6 @@
 pandas
 numpy 
-scikit-learn = 1.9.1
+scikit-learn == 1.9.1
 joblib
 kagglehub[pands-datasets]
 fastapi 
