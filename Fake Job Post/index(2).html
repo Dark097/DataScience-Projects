@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fake Job Post Detector</title>
+<meta name="description" content="Check a job offer before you trust it. Get a fraud-risk score and see which words raised it.">
+<style>
+/* ===== Fake Job Post Detector · noir, with a human touch ===== */
+:root{
+  --bg:#0b0907;--panel:#15110d;--field:#0d0a08;--line:#33291f;--line-2:#4a3d2e;
+  --ink:#f1e8d6;--mute:#ab9f88;--amber:#eaa43c;--bad:#f2705c;--good:#82d6ab;--note:#f0e2bf;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,serif;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;color:var(--ink);font:16px/1.65 var(--sans);-webkit-font-smoothing:antialiased;
+  background:radial-gradient(120% 70% at 75% -10%,#2d2113 0,#130f0a 45%,var(--bg) 100%) fixed}
+/* a little film grain, drifting slowly */
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.06;mix-blend-mode:screen;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence baseFrequency='.8' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation:grain 2s steps(6) infinite}
+@keyframes grain{20%{transform:translate(-2%,1%)}40%{transform:translate(1%,-2%)}60%{transform:translate(-1%,2%)}80%{transform:translate(2%,-1%)}}
+.wrap{max-width:1120px;margin:0 auto;padding:0 1.4rem}
+h1,h2,h3{font-family:var(--serif);font-weight:400;margin:0}
+
+/* ---------- the opening ---------- */
+.hero{position:relative;overflow:hidden;min-height:clamp(360px,60vh,580px);display:grid;align-items:end;border-bottom:1px solid var(--line)}
+.beam{position:absolute;inset:0;pointer-events:none}
+.beam i{position:absolute;top:-12%;right:6%;width:62%;height:140%;transform-origin:78% 0;
+  background:linear-gradient(180deg,rgba(234,164,60,.30),rgba(234,164,60,.07) 60%,transparent);
+  clip-path:polygon(66% 0,92% 0,100% 100%,0 100%);animation:sway 18s ease-in-out infinite alternate;filter:blur(2px)}
+.beam i:nth-child(2){right:-8%;width:50%;opacity:.5;animation-duration:24s;animation-delay:-6s;filter:blur(8px)}
+@keyframes sway{from{transform:rotate(-3deg)}to{transform:rotate(4deg)}}
+.hero::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 30%,rgba(11,9,7,.85) 100%)}
+.hero .wrap{position:relative;z-index:1;width:100%;padding-top:3.2rem;padding-bottom:1.8rem}
+.kicker{font:italic 400 1.1rem var(--serif);color:var(--amber);margin:0 0 .9rem;animation:rise .9s both}
+.hero h1{font-size:clamp(2.7rem,7.6vw,6rem);line-height:1;letter-spacing:-.012em;max-width:10em;animation:rise .9s .1s both;text-shadow:0 4px 40px rgba(0,0,0,.6)}
+.hero h1 em{color:var(--amber);font-style:italic}
+.hero p.lede{max-width:33em;color:#d3c6af;margin:1.2rem 0 0;font-size:1.12rem;animation:rise .9s .3s both}
+.credits{display:flex;flex-wrap:wrap;gap:.6rem 2.6rem;margin-top:2rem;padding-top:1.1rem;border-top:1px solid rgba(241,232,214,.18);color:var(--mute);font-size:.95rem;animation:rise .9s .5s both}
+.credits span{display:flex;align-items:baseline}
+.credits b{font:400 2rem var(--serif);color:var(--ink);margin-right:.55rem}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+.strip{position:relative;z-index:1;height:24px;background:repeating-linear-gradient(90deg,#3a3026 0 12px,transparent 12px 30px) 0 50%/100% 8px no-repeat,#050403;animation:reel 18s linear infinite}
+@keyframes reel{to{background-position:-180px 50%,0 0}}
+
+/* ---------- layout ---------- */
+main.wrap{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.95fr);gap:2rem;padding-top:2.6rem;padding-bottom:2.4rem;align-items:start}
+.panel{position:relative;background:linear-gradient(180deg,#191410,var(--panel));border:1px solid var(--line);border-radius:14px;padding:1.9rem;box-shadow:0 30px 60px -40px #000}
+form{counter-reset:ex}
+fieldset{border:0;margin:0 0 2rem;padding:0}
+legend{display:block;font:400 1.55rem var(--serif);padding:0;margin-bottom:1.2rem}
+legend::before{counter-increment:ex;content:"Step " counter(ex) " of 2";display:block;font:italic 400 .98rem var(--serif);color:var(--amber);margin-bottom:.1rem}
+label{display:block;font-weight:600;font-size:.93rem;margin-bottom:1.05rem}
+label small{font-weight:400;color:var(--mute)}
+input[type=text],textarea,select{display:block;width:100%;margin-top:.4rem;font:inherit;font-weight:400;color:var(--ink);background:var(--field);border:1px solid var(--line-2);border-radius:10px;padding:.7rem .9rem;transition:border-color .2s,box-shadow .2s}
+::placeholder{color:#7d7261;opacity:1}
+textarea{min-height:7.5rem;resize:vertical}
+input:hover,textarea:hover,select:hover{border-color:#62523f}
+input:focus,textarea:focus,select:focus{outline:0;border-color:var(--amber);box-shadow:0 0 0 4px rgba(234,164,60,.17)}
+button:focus-visible{outline:2px solid var(--amber);outline-offset:3px}
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:.9rem}
+.check{display:flex;gap:.75rem;align-items:center;font-weight:400;margin-bottom:.6rem;padding:.65rem .9rem;background:var(--field);border:1px solid var(--line);border-radius:10px;cursor:pointer;transition:border-color .2s}
+.check:hover{border-color:var(--line-2)}
+.check input{margin:0;width:1.05rem;height:1.05rem;accent-color:var(--amber)}
+.actions{display:flex;flex-wrap:wrap;align-items:center;gap:1rem 1.4rem}
+button{font:inherit;cursor:pointer}
+.primary{background:var(--amber);color:#1a1209;border:0;border-radius:999px;padding:.85rem 1.9rem;font-weight:700;font-size:1rem;
+  box-shadow:0 12px 26px -12px rgba(234,164,60,.75);transition:transform .2s,filter .2s}
+.primary:hover{filter:brightness(1.07);transform:translateY(-2px)}
+.primary:disabled{opacity:.55;cursor:wait;transform:none}
+.link{background:none;border:0;color:var(--amber);padding:0;font-size:.95rem;text-decoration:underline;text-underline-offset:4px;text-decoration-thickness:1px}
+.link:hover{color:var(--ink)}
+.try{margin-left:auto;font-size:.95rem;color:var(--mute)}
+
+/* ---------- the report ---------- */
+aside{position:sticky;top:1.2rem;overflow:hidden;min-height:22rem}
+aside h2{font-size:1.55rem;margin-bottom:1.2rem}
+aside h2::before{content:"Here's what it found";display:block;font:italic 400 .98rem var(--serif);color:var(--amber);margin-bottom:.1rem}
+.hint{color:var(--mute)}
+#scan{position:absolute;left:0;right:0;top:0;height:70px;pointer-events:none;background:linear-gradient(180deg,transparent,rgba(234,164,60,.2) 85%,var(--amber));animation:scan 1.6s ease-in-out infinite alternate}
+@keyframes scan{from{transform:translateY(-70px)}to{transform:translateY(24rem)}}
+#fail{color:#ffb4a6;border:1px solid rgba(242,112,92,.4);background:rgba(242,112,92,.09);border-radius:10px;padding:.75rem 1rem}
+#done{--c:var(--good)}
+#done.bad{--c:var(--bad)}
+.v{display:inline-block;font:700 clamp(1.05rem,2.6vw,1.4rem) var(--serif);letter-spacing:.1em;text-transform:uppercase;color:var(--c);
+  border:4px double var(--c);border-radius:8px;padding:.3rem .95rem;transform:rotate(-2deg);animation:stamp .5s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes stamp{from{opacity:0;transform:rotate(-2deg) scale(1.8)}}
+.pct{font:400 5rem/1 var(--serif);margin:1.2rem 0 .2rem;color:var(--ink)}
+.sub{margin:0;color:var(--mute);font-size:.95rem}
+.note{margin:1rem 0 0;font:italic 400 1.08rem/1.5 var(--serif);color:var(--ink)}
+.meter{position:relative;height:10px;margin:1.6rem 0 .6rem;border-radius:999px;overflow:visible;
+  background:repeating-linear-gradient(90deg,var(--line-2) 0 2px,transparent 2px 10px) 0 0/100% 100%,#0d0a08;border:1px solid var(--line)}
+.meter i{display:block;height:100%;width:0;background:var(--c);border-radius:999px;box-shadow:0 0 14px -2px var(--c)}
+.meter b{position:absolute;left:50%;top:-7px;width:2px;height:22px;background:var(--ink);border-radius:2px}
+.scale{display:flex;justify-content:space-between;font-size:.82rem;color:var(--mute)}
+#done h4{font:italic 400 1.15rem var(--serif);color:var(--amber);margin:1.9rem 0 .7rem}
+#sig{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:.45rem}
+#sig li{border:1px solid rgba(234,164,60,.5);background:rgba(234,164,60,.09);color:var(--ink);border-radius:999px;padding:.12rem .75rem;font-size:.9rem}
+#sig span{color:var(--amber);margin-left:.45rem;font-size:.8rem}
+.marked{white-space:pre-wrap;font-size:.92rem;color:var(--mute);max-height:11rem;overflow:auto;border-left:3px solid var(--amber);padding-left:.95rem;margin:0}
+mark{background:rgba(234,164,60,.3);color:var(--ink);border-radius:3px;padding:0 .15em;box-shadow:0 1px 0 var(--amber)}
+/* the advice, as a note stuck to the page */
+#done h4.tipshead{margin-top:2.3rem}
+#tips{position:relative;list-style:none;margin:0;padding:1.2rem 1.3rem 1rem;background:var(--note);color:#2b2118;border-radius:3px;
+  transform:rotate(-.6deg);box-shadow:0 16px 26px -16px #000;font-size:.94rem;line-height:1.5}
+#tips::before{content:"";position:absolute;top:-11px;left:50%;width:78px;height:22px;margin-left:-39px;background:rgba(255,255,255,.28);transform:rotate(2deg);box-shadow:0 1px 3px rgba(0,0,0,.25)}
+#tips li{position:relative;padding-left:1.5rem;margin-bottom:.65rem}
+#tips li::before{content:"\2713";position:absolute;left:0;color:#8a5610;font-weight:700}
+.fine{margin:1.8rem 0 0;padding-top:1rem;border-top:1px solid var(--line);color:var(--mute);font-size:.85rem}
+footer{max-width:1120px;margin:0 auto;padding:0 1.4rem 2.6rem;color:var(--mute);text-align:center}
+.foot-note{margin:0 0 .9rem;font:italic 400 .95rem var(--serif)}
+.foot-links{margin:0;padding-top:.9rem;border-top:1px solid var(--line);font-size:.78rem;letter-spacing:.02em}
+.foot-links a{color:var(--amber);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;transition:color .2s}
+.foot-links a:hover{color:var(--ink)}
+[hidden]{display:none!important}
+@media(max-width:900px){main.wrap{grid-template-columns:1fr}aside{position:relative;top:0;min-height:0}.three{grid-template-columns:1fr}.try{margin-left:0}.hero .wrap{padding-top:2.2rem}.pct{font-size:4rem}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="beam"><i></i><i></i></div>
+  <div class="wrap">
+    <p class="kicker">A second pair of eyes for job hunters</p>
+    <h1>Fake Job Post <em>Detector</em></h1>
+    <p class="lede">Got an offer that feels a little too good to be true? Paste it below and get an honest estimate of how likely it is to be a scam, plus the words that gave it away.</p>
+    <div class="credits">
+      <span><b>17,900</b>postings it learned from</span>
+      <span><b>86%</b>of fake posts caught</span>
+      <span><b>81%</b>of its warnings were right</span>
+    </div>
+  </div>
+</header>
+<div class="strip" aria-hidden="true"></div>
+
+<main class="wrap">
+  <form id="f" class="panel" novalidate>
+    <fieldset>
+      <legend>Paste the posting</legend>
+      <label>Job title
+        <input type="text" name="title" required maxlength="200" autocomplete="off" placeholder="e.g. Data Entry Clerk - Work From Home">
+      </label>
+      <label>Company profile <small>(the "about us" part, if there is one)</small>
+        <textarea name="company_profile" maxlength="20000" placeholder="Who are they? Leave this empty if the posting doesn't say."></textarea>
+      </label>
+      <label>Job description
+        <textarea name="description" maxlength="20000" placeholder="What the job involves, how to apply, what they promise..."></textarea>
+      </label>
+      <label>Requirements
+        <textarea name="requirements" maxlength="20000" placeholder="Skills, experience or qualifications they ask for"></textarea>
+      </label>
+    </fieldset>
+
+    <fieldset>
+      <legend>A few details</legend>
+      <div class="three">
+        <label>Employment type
+          <select name="employment_type"><option>Unknown</option><option>Full-time</option><option>Part-time</option><option>Contract</option><option>Temporary</option><option>Other</option></select>
+        </label>
+        <label>Experience
+          <select name="required_experience"><option>Unknown</option><option>Internship</option><option>Entry level</option><option>Associate</option><option>Mid-Senior level</option><option>Director</option><option>Executive</option><option>Not Applicable</option></select>
+        </label>
+        <label>Education
+          <select name="required_education"><option>Unknown</option><option>Unspecified</option><option>High School or equivalent</option><option>Some College Coursework Completed</option><option>Vocational</option><option>Certification</option><option>Associate Degree</option><option>Bachelor's Degree</option><option>Master's Degree</option><option>Professional</option><option>Doctorate</option></select>
+        </label>
+      </div>
+      <label class="check"><input type="checkbox" name="telecommuting"> It's remote or work from home</label>
+      <label class="check"><input type="checkbox" name="has_company_logo"> The posting shows a company logo</label>
+      <label class="check"><input type="checkbox" name="has_questions"> The application asks screening questions</label>
+    </fieldset>
+
+    <div class="actions">
+      <button class="primary" id="go">Is this job real?</button>
+      <span class="try">Just exploring? Try <button type="button" class="link" data-ex="bad">a suspicious one</button> or <button type="button" class="link" data-ex="good">an ordinary one</button></span>
+    </div>
+  </form>
+
+  <aside class="panel" id="report" aria-live="polite">
+    <div id="scan" hidden></div>
+    <h2>The report</h2>
+    <p class="hint" id="empty">Nothing here yet. Fill in the posting on the left and press "Is this job real?"</p>
+    <p class="hint" id="busy" hidden>Taking a careful look...</p>
+    <p id="fail" hidden></p>
+    <div id="done" hidden>
+      <h3 class="v" id="v"></h3>
+      <div class="pct" id="pct"></div>
+      <p class="sub">estimated chance this posting is fraudulent</p>
+      <p class="note" id="note"></p>
+      <div class="meter"><i id="bar"></i><b title="Decision threshold"></b></div>
+      <div class="scale"><span>0%</span><span>flagged above 50%</span><span>100%</span></div>
+      <div id="evidence">
+        <h4>Words that raised the score</h4>
+        <ul id="sig"></ul>
+        <h4>The posting, marked up</h4>
+        <p class="marked" id="marked"></p>
+      </div>
+      <h4 class="tipshead">A few things before you apply</h4>
+      <ul id="tips">
+        <li>Find the company on its own official website and apply from there, not through a link in the posting.</li>
+        <li>Never pay a fee, buy equipment, or send bank or ID details to get a job.</li>
+        <li>Be wary of interviews held only on chat apps and of pay far above the usual for the role.</li>
+      </ul>
+    </div>
+    <p class="fine">A high score means look closer, not that it is definitely a scam, and a low score is not a promise. The 86% and 81% figures come from 3,576 postings the model had never seen during training.</p>
+  </aside>
+</main>
+<footer>
+  <p class="foot-note">A machine-learning project. Take its answer as a second opinion, never the last word.</p>
+  <p class="foot-links">Crafted by Riju Jain &middot;
+    <a href="https://www.linkedin.com/in/riju-jain-2819432b2" target="_blank" rel="noopener noreferrer">LinkedIn</a> &middot;
+    <a href="https://www.instagram.com/riju__jain?xtok=dmVkdWRjNTZ2djIy" target="_blank" rel="noopener noreferrer">Instagram</a>
+  </p>
+</footer>
+
+<script>
+const $=s=>document.querySelector(s), f=$('#f'), E=f.elements;
+const EX={
+  bad:{title:'Data Entry Clerk - Work From Home',company_profile:'',description:'We are hiring immediately. Earn $4,500 per week from home with no experience needed. All you need is a laptop and internet. To start, send your full name, address, ID photo and bank details to our hiring manager on WhatsApp. A small refundable registration fee is required for your starter kit.',requirements:'No experience needed. Must be 18 or older. Start today.',employment_type:'Part-time',required_experience:'Entry level',required_education:'Unspecified',telecommuting:1,has_company_logo:0,has_questions:0},
+  good:{title:'Backend Software Engineer',company_profile:'Tidewater Systems builds route-planning software used by regional delivery firms in 12 countries. Our engineering team of 40 works from Pune and Berlin.',description:'You will design and maintain REST services in Python and PostgreSQL, review code, and work with product managers to ship features every two weeks. After your first three months you will join the on-call rotation.',requirements:"3+ years of professional experience with Python. Experience with SQL databases and automated tests. Bachelor's degree in computer science or equivalent experience.",employment_type:'Full-time',required_experience:'Mid-Senior level',required_education:"Bachelor's Degree",telecommuting:0,has_company_logo:1,has_questions:1}};
+const FLAGS=['telecommuting','has_company_logo','has_questions'];
+const show=id=>{['empty','busy','fail','done'].forEach(k=>$('#'+k).hidden=k!==id);$('#scan').hidden=id!=='busy'};
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+const still=matchMedia('(prefers-reduced-motion:reduce)').matches;
+
+document.querySelectorAll('[data-ex]').forEach(b=>b.onclick=()=>{
+  const e=EX[b.dataset.ex];
+  for(const k in e) FLAGS.includes(k)?E[k].checked=!!e[k]:E[k].value=e[k];
+  show('empty');
+});
+
+f.onsubmit=async ev=>{
+  ev.preventDefault();
+  if(!E.title.value.trim()){E.title.focus();return fail('Add a job title first, so there is something to check.')}
+  const body=Object.fromEntries(new FormData(f)); FLAGS.forEach(k=>body[k]=E[k].checked?1:0);
+  $('#go').disabled=true; show('busy');
+  try{
+    const [r]=await Promise.all([fetch('/predict',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}),wait(still?0:900)]);
+    const d=await r.json();
+    if(!r.ok) throw new Error(d.error||d.detail&&'The server could not read that request ('+r.status+').'||'Something went wrong ('+r.status+').');
+    render(d,body);
+  }catch(e){fail(e instanceof TypeError?'Could not reach the server. Open this page from your FastAPI address (for example http://127.0.0.1:8000), not as a file.':e instanceof SyntaxError?'The server sent back something unreadable. Check the uvicorn terminal for an error.':e.message)}
+  $('#go').disabled=false;
+  if(matchMedia('(max-width:900px)').matches)$('#report').scrollIntoView({behavior:'smooth'});
+};
+
+function fail(m){$('#fail').textContent=m;show('fail')}
+
+function render(d,b){
+  d.signals=d.signals||[]; // your FastAPI sends only fraudulent + probability; extras are optional
+  const p=Math.round(d.probability*100), bad=!!d.fraudulent;
+  $('#done').classList.toggle('bad',bad);
+  $('#v').textContent=bad?'Looks like a scam':'Looks genuine';
+  $('#note').textContent=bad
+    ?(p>=80?'This one has a lot in common with known scams. Be very careful before you share anything or pay anything.':'Some things about this posting match known scams. Look a little closer before you reply.')
+    :(p>=25?'Nothing alarming, but a few details are worth a second look. A quick check of the company never hurts.':'Nothing here stands out as a red flag. Looking up the company on its own website is still a good habit.');
+  // count the score up once, like a reveal
+  const dur=still?0:900, t0=performance.now();
+  (function tick(t){const k=dur?Math.min(1,(t-t0)/dur):1, e=1-Math.pow(1-k,3);
+    $('#pct').textContent=Math.round(p*e)+'%'; $('#bar').style.width=Math.max(p*e,1)+'%';
+    if(k<1)requestAnimationFrame(tick)})(t0);
+  // evidence: flagged words as tags, and highlighted inside the posting itself
+  $('#sig').replaceChildren(...d.signals.map(s=>{const li=document.createElement('li');li.textContent=s.word;const w=document.createElement('span');w.textContent='+'+s.weight;li.append(w);return li}));
+  const box=$('#marked'); box.replaceChildren();
+  $('#evidence').hidden=!d.signals.length;
+  if(d.signals.length){
+    const re=new RegExp('\\b('+d.signals.map(s=>s.word.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')).join('|')+')\\b','gi');
+    const text=[b.title,b.company_profile,b.description,b.requirements].filter(Boolean).join('\n\n').slice(0,2500);
+    text.split(re).forEach((part,i)=>{if(i%2){const m=document.createElement('mark');m.textContent=part;box.append(m)}else box.append(part)});
+  }
+  show('done');
+}
+</script>
+</body>
+</html>

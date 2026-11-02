@@ -26,7 +26,7 @@ class job(BaseModel):
 @app.get('/')
 @app.get('/predict')
 def home():
-    return FileResponse('index (2).html')
+    return FileResponse('index(2).html')
 
 
 @app.post("/predict")
