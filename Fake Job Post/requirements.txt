@@ -1,0 +1,9 @@
+pandas
+numpy 
+scikit-learn = 1.9.1
+joblib
+kagglehub[pands-datasets]
+fastapi 
+uvicorn 
+nltk
+pydantic
